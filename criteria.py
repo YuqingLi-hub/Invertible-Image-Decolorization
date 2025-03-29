@@ -8,9 +8,10 @@ from torchvision.models import vgg19
 
 
 class ConsistencyLoss(nn.Module):
-    def __init__(self, device, img_shape, threshold=70 / 127, vgg_layer_idx=21, c_weight=1e-7):
+    def __init__(self, device, img_shape, threshold=70 / 127, vgg_layer_idx=27, c_weight=1e-7):
         """
         if vgg_layer_idx=21, it forwards to conv_layer(conv+relu)4_1
+        we need vgg conv 4_4
         """
         super().__init__()
 
