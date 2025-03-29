@@ -49,7 +49,7 @@ class GrayscaleConformityLoss(nn.Module):
         super().__init__()
 
         self.threshold = threshold
-        self.vgg = nn.DataParallel(vgg19(pretrained=True).features[:vgg_layer_idx]).to(device)
+        self.vgg = nn.DataParallel(vgg19(weights='VGG19_Weights.DEFAULT').features[:vgg_layer_idx]).to(device)
 #         self.dis = nn.MSELoss(reduction="sum")
         self.dis = nn.L1Loss(reduction="sum")
 
