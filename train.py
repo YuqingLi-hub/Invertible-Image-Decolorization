@@ -32,7 +32,8 @@ class Logger(object):
 def main(args):
     beginner = args.beginner
     stride = args.stride
-    device = args.device
+    # device = args.device
+    device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
     batch_size = args.batch_size
     epoch = args.Epoch
     lr = args.lr
@@ -59,9 +60,11 @@ def main(args):
         net.load_state_dict(torch.load("./models/****.pth"))
 
     net = torch.nn.DataParallel(net, device_ids=[0, 1])
-    net.cuda(device=device)
+    # net.cuda(device=device)
+    net.to(device=device)
     quantize = Quantization()
-    loss_cons = ConsistencyLoss(device="cuda:0", img_shape=(batch_size, 1, 128, 128), c_weight=args.c_weight)
+    # loss_cons = ConsistencyLoss(device="cuda:0", img_shape=(batch_size, 1, 128, 128), c_weight=args.c_weight)
+    loss_cons = ConsistencyLoss(device=device, img_shape=(batch_size, 1, 128, 128), c_weight=args.c_weight)
     loss_dist = nn.MSELoss(reduction="sum")
 
     tmp = filter(lambda x: x.requires_grad, net.parameters())
@@ -83,8 +86,10 @@ def main(args):
         for batch_idx, (tensor_g, tensor_c) in enumerate(TrainLoader):
             n, _, h, w = tensor_c.size()
 
-            tensor_c = tensor_c.cuda(device=device)
-            tensor_g = tensor_g.cuda(device=device)
+            # tensor_c = tensor_c.cuda(device=device)
+            # tensor_g = tensor_g.cuda(device=device)
+            tensor_c = tensor_c.to(device=device)
+            tensor_g = tensor_g.to(device=device)
 
             tensor_g.requires_grad = False
             tensor_c.requires_grad = False
@@ -134,7 +139,8 @@ def main(args):
         for batch_idx, (tensor_g, tensor_c, h, w) in enumerate(ValidLoader):
             n, _, _, _ = tensor_c.size()
 
-            tensor_g, tensor_c = tensor_g.cuda(device=device), tensor_c.cuda(device=device)
+            # tensor_g, tensor_c = tensor_g.cuda(device=device), tensor_c.cuda(device=device)
+            tensor_g, tensor_c = tensor_g.to(device=device), tensor_c.to(device=device)
             tensor_g.requires_grad = False
             tensor_c.requires_grad = False
 
@@ -185,11 +191,11 @@ if __name__ == "__main__":
     # For Dataset and Record
     parser.add_argument("--stride", type=int, default=10, help='the stride for saving models')
     parser.add_argument("--paired", type=str2bool, default=True, help="paired or unpaired")
-    parser.add_argument("--root", type=str, default="F:/datasets/Colorization/VCIP2020_Colorization_Challenge/",
+    parser.add_argument("--root", type=str, default="/home/yuqli/Recreation/Invertible-Image-Decolorization/",
                         help="data root")
     # For Training
     parser.add_argument("--load_checkpoint", type=str2bool, default=False)
-    parser.add_argument("--batch_size", type=int, default=2)
+    parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--beginner", type=int, default=0)
     parser.add_argument('--Epoch', type=int, default=1)
     parser.add_argument("--c_weight", type=float)
@@ -197,7 +203,7 @@ if __name__ == "__main__":
     parser.add_argument("--r_weight", type=float)
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--weight_decay", type=float, default=5e-4)
-    parser.add_argument('--device', type=int, default=0)
+    # parser.add_argument('--device', type=int, default=0)
     args = parser.parse_args()
 
     main(args)
