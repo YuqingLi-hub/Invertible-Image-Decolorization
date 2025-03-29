@@ -9,7 +9,7 @@ from datasets.utls import *
 
 
 class Kodak24(data.Dataset):
-    def __init__(self, root='/media/ruizhao/programs/datasets/Denoising/testset/Kodak24/'):
+    def __init__(self, root='/home/yuqli/Recreation/InvNetworks/data/PhotoCD_PCD0992/'):
         self.root = root
         self.image_name = []
         for _, _, files in os.walk(self.root):
@@ -47,7 +47,7 @@ class Kodak24(data.Dataset):
 
 
 class MakeTrainSet(data.Dataset):
-    def __init__(self, root="/media/ruizhao/data/Datasets/VOCtrainval_11-May-2012/VOCdevkit/VOC2012/JPEGImages/"):
+    def __init__(self, root="/home/yuqli/Recreation/InvNetworks/data/JPEGImages/"):
         self.root = root
 
         path = sorted(glob.glob(os.path.join(self.root, "*.jpg")))
@@ -91,7 +91,7 @@ class MakeTrainSet(data.Dataset):
 
 class MakeValidSet(data.Dataset):
 
-    def __init__(self, root="/media/ruizhao/data/Datasets/VOCtrainval_11-May-2012/VOCdevkit/VOC2012/JPEGImages/"):
+    def __init__(self, root="/home/yuqli/Recreation/InvNetworks/data/JPEGImages/"):
         self.root = root
 
         path = sorted(glob.glob(os.path.join(self.root, "*.jpg")))

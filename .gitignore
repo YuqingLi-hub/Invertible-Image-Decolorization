@@ -1,2 +1,6 @@
 ./datasets/kodak
 ./datasets/VOCdevkit
+./__pychache__/
+./datasets/__pychache__/
+./models/20*
+./models/C*
