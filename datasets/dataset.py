@@ -30,10 +30,12 @@ class Kodak24(data.Dataset):
 
         h, w, _ = img_g.shape
 
-        pad_x, pad_y = 512 - h, 512 - w
+        # pad_x, pad_y = 512 - h, 512 - w
 
-        img_g = np.pad(img_g, ((0, pad_x), (0, pad_y), (0, 0)))
-        img_c = np.pad(img_c, ((0, pad_x), (0, pad_y), (0, 0)))
+        # img_g = np.pad(img_g, ((0, pad_x), (0, pad_y), (0, 0)))
+        # img_c = np.pad(img_c, ((0, pad_x), (0, pad_y), (0, 0)))
+        img_g = img_g[:512, :512, :]
+        img_c = img_c[:512, :512, :]
 
         img_c = img_c.transpose((2, 0, 1))  # C*W*H
         img_g = img_g.transpose((2, 0, 1))  # C*W*H
