@@ -110,7 +110,7 @@ def main(args):
             tensor_y = net(x=[tensor_x_], rev=True)[0]
 
             loss_invt = loss_cons(gray_img=tensor_prg, ref_img=tensor_g, original_img=tensor_c,
-                                  restored_img=tensor_y, loss_stage=1, c_wegiht=args.s_weight) / n
+                                  restored_img=tensor_y, loss_stage=1, s_weight=args.s_weight) / n
             loss_self = (tensor_z**2).sum() / (128**2 * 2 * n)
             loss_gray = loss_dist(tensor_prg, tensor_g) / n
             loss = loss_invt + args.r_weight * loss_self / 2 + args.g_weight * loss_gray
@@ -198,9 +198,10 @@ if __name__ == "__main__":
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--beginner", type=int, default=0)
     parser.add_argument('--Epoch', type=int, default=1)
-    parser.add_argument("--c_weight", type=float)
-    parser.add_argument("--s_weight", type=float)
-    parser.add_argument("--r_weight", type=float)
+    parser.add_argument("--c_weight", type=float,default=0.7)
+    parser.add_argument("--s_weight", type=float,default=0.5)
+    parser.add_argument("--r_weight", type=float,default=0.1)
+    parser.add_argument("--g_weight", type=float,default=1)
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--weight_decay", type=float, default=5e-4)
     # parser.add_argument('--device', type=int, default=0)
