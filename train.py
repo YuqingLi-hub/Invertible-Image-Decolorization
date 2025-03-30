@@ -197,7 +197,7 @@ if __name__ == "__main__":
     parser.add_argument("--load_checkpoint", type=str2bool, default=False)
     parser.add_argument("--batch_size", type=int, default=16)
     parser.add_argument("--beginner", type=int, default=0)
-    parser.add_argument('--Epoch', type=int, default=1)
+    parser.add_argument('--Epoch', type=int, default=300)
     parser.add_argument("--c_weight", type=float,default=0.7)
     parser.add_argument("--s_weight", type=float,default=0.5)
     parser.add_argument("--r_weight", type=float,default=0.1)
