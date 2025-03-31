@@ -191,7 +191,7 @@ if __name__ == "__main__":
     # For Dataset and Record
     parser.add_argument("--stride", type=int, default=10, help='the stride for saving models')
     parser.add_argument("--paired", type=str2bool, default=True, help="paired or unpaired")
-    parser.add_argument("--root", type=str, default="/home/yuqli/Recreation/Invertible-Image-Decolorization/",
+    parser.add_argument("--root", type=str, default="/fred/oz410/project/IDN/Invertible-Image-Decolorization/",
                         help="data root")
     # For Training
     parser.add_argument("--load_checkpoint", type=str2bool, default=False)
