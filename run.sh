@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --output=/fred/oz094/yqli/output/IDN/%x-out.txt  # %x = job name
+#SBATCH --error=/fred/oz094/yqli/output/IDN/%x-out.txt  # %x = job name
 #SBATCH --ntasks=1
 #SBATCH -c 8
 #SBATCH --mem=8G

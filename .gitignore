@@ -3,3 +3,5 @@
 __pycache__/
 datasets/__pycache__/
 models/
+slurm*
+core*

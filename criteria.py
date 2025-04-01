@@ -18,7 +18,7 @@ class ConsistencyLoss(nn.Module):
         self.i_loss = InvertibilityLoss()
         self.g_loss = GrayscaleConformityLoss(device, img_shape, threshold, vgg_layer_idx, c_weight)
         self.q_loss = QuantizationLoss()
-        self.l_loss = FlowLoss()
+        # self.l_loss = FlowLoss()
 
     def forward(self, gray_img, ref_img, original_img, restored_img, loss_stage, s_weight):
         i_loss = self.i_loss(original_img, restored_img)
