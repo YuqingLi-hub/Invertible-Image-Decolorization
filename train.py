@@ -110,11 +110,12 @@ def main(args):
             tensor_y = net(x=[tensor_x_], rev=True)[0]
 
             loss_invt = loss_cons(gray_img=tensor_prg, ref_img=tensor_g, original_img=tensor_c,
-                                  restored_img=tensor_y, loss_stage=1, s_weight=args.s_weight) / n
+                                  restored_img=tensor_y, z=tensor_z, loss_stage=1, s_weight=args.s_weight,g_weight=args.g_weight) / n
             loss_self = (tensor_z**2).sum() / (128**2 * 2 * n)
             loss_gray = loss_dist(tensor_prg, tensor_g) / n
-            loss = loss_invt + args.r_weight * loss_self / 2 + args.g_weight * loss_gray
-
+            # loss = loss_invt + args.r_weight * loss_self / 2 + args.g_weight * loss_gray
+            loss = loss_invt 
+            
             loss.backward()
             torch.nn.utils.clip_grad_norm_(net.parameters(), 10)
             optimizer.step()

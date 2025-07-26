@@ -1,14 +1,14 @@
 import torch.distributions as D
 from torch.autograd import Variable
 import math
-
+import numpy as np
 import torch
 import torch.nn as nn
 from torchvision.models import vgg19
 
 
 class ConsistencyLoss(nn.Module):
-    def __init__(self, device, img_shape, threshold=70 / 127, vgg_layer_idx=27, c_weight=1e-7):
+    def __init__(self, device, img_shape, threshold=70 / 127, vgg_layer_idx=27, c_weight=1e-7,g_weight=0.1):
         """
         if vgg_layer_idx=21, it forwards to conv_layer(conv+relu)4_1
         we need vgg conv 4_4
@@ -18,14 +18,15 @@ class ConsistencyLoss(nn.Module):
         self.i_loss = InvertibilityLoss()
         self.g_loss = GrayscaleConformityLoss(device, img_shape, threshold, vgg_layer_idx, c_weight)
         self.q_loss = QuantizationLoss()
-        # self.l_loss = FlowLoss()
+        self.l_loss = FlowLoss()
+        self.g_weight = g_weight
 
-    def forward(self, gray_img, ref_img, original_img, restored_img, loss_stage, s_weight):
+    def forward(self, gray_img, ref_img, original_img, restored_img, z,loss_stage, s_weight):
         i_loss = self.i_loss(original_img, restored_img)
-
+        l_loss = self.l_loss(z)
         if loss_stage == 1:
             g_loss = self.g_loss(gray_img, ref_img, original_img, ls_weight=s_weight)
-            total_loss = 3 * i_loss + g_loss # 3 channels
+            total_loss =  i_loss + g_loss + self.g_weight * l_loss # 3 channels
         elif loss_stage == 2:
             g_loss = self.g_loss(gray_img, original_img, ls_weight=s_weight)
             q_loss = self.q_loss(gray_img)
@@ -39,10 +40,11 @@ class ConsistencyLoss(nn.Module):
 class InvertibilityLoss(nn.Module):
     def __init__(self):
         super().__init__()
-
+        # use the l2, summation 
         self.loss = nn.MSELoss(reduction="sum")
 
     def forward(self, original_img, restored_img):
+        # calculate the reconstruction loss, or quantization loss 
         return self.loss(original_img, restored_img)
 
 
@@ -59,13 +61,17 @@ class GrayscaleConformityLoss(nn.Module):
         self.zeros = torch.zeros(img_shape).to(device)
 
     def lightness(self, gray_img, original_luminance):
+        # calculate the grey scale loss, illumination loss
+        # TODO: check why need the threshold?
         # print(original_luminance.shape, gray_img.shape, self.zeros.shape)
         # loss = torch.mean(torch.max(torch.abs(original_luminance.repeat(1, 3, 1, 1) - gray_img) - self.threshold, self.zeros))
         loss = torch.mean(torch.max(torch.abs(original_luminance - gray_img) - self.threshold, self.zeros))
         return loss
 
     def contrast(self, gray_img, original_img):
+        # contrast loss of gray image and original image, the vgg conv4_4 after relu
         def _rescale(img):
+            # normalize the image to [0, 1] range
             img = (img + 1) / 2 * 255
             img[:, 0, :, :] = img[:, 0, :, :] - 123.68      # subtract vgg mean following the implementation by authors(meaning?)
             img[:, 1, :, :] = img[:, 1, :, :] - 116.779
@@ -77,6 +83,7 @@ class GrayscaleConformityLoss(nn.Module):
         return self.dis(vgg_g, vgg_o)
 
     def local_structure(self, gray_img, original_luminance):
+        # calculate the total variation loss, structure loss
         def _tv(img):
             h_diff = img[:, :, 1:, :] - img[:, :, :-1, :]
             w_diff = img[:, :, :, 1:] - img[:, :, :, :-1]
@@ -119,6 +126,7 @@ class QuantizationLoss(nn.Module):
 
 
 class FlowLoss(nn.Module):
+    # latent loss
     def __init__(self):
         super(FlowLoss, self).__init__()
 
@@ -129,14 +137,28 @@ class FlowLoss(nn.Module):
     def base_dist(self):
         return D.Normal(self.base_dist_mean, self.base_dist_var)
 
-    def forward(self, x, zs, logdet, bits_per_pixel=False):
-        log_prob = sum(self.base_dist.log_prob(z).sum([1, 2, 3]) for z in zs) + logdet
+    def forward(self, zs, bits_per_pixel=False):
+        # log_prob = sum(self.base_dist.log_prob(z).sum([1, 2, 3]) for z in zs) + logdet
+        # if bits_per_pixel:
+        #     log_prob /= (math.log(2) * x[0].numel())
+        # return log_prob
+        # logdet = logdet.to(zs.device)
+        z2 = []
+        # Compute log-likelihood: log p(z)
+        for z in zs:
+            D = z.shape[0]  # total number of elements
+            log_pz_manual = -0.5 * torch.sum(z ** 2) - 0.5 * D * torch.log(torch.tensor(2 * np.pi))
+            z2.append(log_pz_manual)
+        # loss = -sum(z2) / (len(zs) * zs[0].shape[0]* zs[0].shape[1] *zs[0].shape[2])  # Average over batch size
         if bits_per_pixel:
-            log_prob /= (math.log(2) * x[0].numel())
-        return log_prob
+            loss = -sum(z2) / (math.log(2) * zs[0].numel())
+        else:
+            loss = -sum(z2) / len(zs)
+        return loss
 
 
 class TVLoss(nn.Module):
+    # total variation loss
     def __init__(self, TVLoss_weight=1):
         super(TVLoss,self).__init__()
         self.TVLoss_weight = TVLoss_weight
